@@ -88,5 +88,5 @@ func collector() {
 	}
 
 	// Don't collect for a time interval
-	time.Sleep(*pause * time.Second)
+	time.Sleep(time.Duration(*pause) * time.Second)
 }
