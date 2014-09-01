@@ -14,8 +14,10 @@ var GC *bool = flag.Bool("gc", false, "Collect GC Statistics")
 var prefix string
 var s g2s.Statter
 
+var err error
+
 func init() {
-    s, err := g2s.Dial("udp", "localhost:8125")
+    s, err = g2s.Dial("udp", "localhost:8125")
 
     if err != nil {
         panic("Unable to connect to Statsd")
@@ -23,7 +25,7 @@ func init() {
 
     flag.Parse()
 
-    prefix, err := os.Hostname()
+    prefix, err = os.Hostname()
 
     if err != nil {
         prefix = "unknown_host.go"
