@@ -55,7 +55,7 @@ func collector() {
         s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.total"), string(m.TotalAlloc))
         s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.sys"), string(m.Sys))
         s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.lookups"), string(m.Lookups))
-        s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.malloc"), string(m.Malloc))
+        s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.malloc"), string(m.Mallocs))
         s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.frees"), string(m.Frees))
 
         // Heap
