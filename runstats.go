@@ -3,13 +3,15 @@ package runstats
 import "os"
 import "fmt"
 import "flag"
+import "time"
 import "runtime"
 
 import "github.com/bmhatfield/g2s"
 
-var CPU *bool = flag.Bool("cpu", false, "Collect CPU Statistics")
-var MEM *bool = flag.Bool("mem", false, "Collect Memory Statistics")
-var GC *bool = flag.Bool("gc", false, "Collect GC Statistics")
+var pause *int = flag.Int("pause", 10, "Collection pause interval")
+var CPU *bool = flag.Bool("cpu", true, "Collect CPU Statistics")
+var MEM *bool = flag.Bool("mem", true, "Collect Memory Statistics")
+var GC *bool = flag.Bool("gc", true, "Collect GC Statistics (requires Memory be enabled)")
 
 var prefix string
 var s g2s.Statter
@@ -47,10 +49,7 @@ func collector() {
 
     if *MEM {
         m := new(runtime.MemStats)
-
         runtime.ReadMemStats(m)
-
-        // s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem."), string(m.))
 
         // General
         s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.alloc"), string(m.Alloc))
@@ -87,4 +86,7 @@ func collector() {
             s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.count"), string(m.NumGC))
         }
     }
+
+    // Don't collect for a time interval
+    time.Sleep(*pause * time.Second)
 }
