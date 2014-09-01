@@ -7,9 +7,9 @@ import "runtime"
 
 import "github.com/bmhatfield/g2s"
 
-var CPU *bool = flag.Bool('cpu', false, 'Collect CPU Statistics')
-var MEM *bool = flag.Bool('mem', false, 'Collect Memory Statistics')
-var GC *bool = flag.Bool('gc', false, 'Collect GC Statistics')
+var CPU *bool = flag.Bool("cpu", false, "Collect CPU Statistics")
+var MEM *bool = flag.Bool("mem", false, "Collect Memory Statistics")
+var GC *bool = flag.Bool("gc", false, "Collect GC Statistics")
 
 var prefix string
 var s g2s.Statter
