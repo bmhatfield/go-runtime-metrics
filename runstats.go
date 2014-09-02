@@ -4,6 +4,7 @@ import "os"
 import "fmt"
 import "flag"
 import "time"
+import "strconv"
 import "runtime"
 
 import "github.com/bmhatfield/g2s"
@@ -41,10 +42,10 @@ func init() {
 func collector() {
 	if *CPU {
 		// Goroutines
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "cpu.goroutines"), string(runtime.NumGoroutine()))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "cpu.goroutines"), strconv.Itoa(runtime.NumGoroutine()))
 
 		// CGo calls
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "cpu.cgo_calls"), string(runtime.NumCgoCall()))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "cpu.cgo_calls"), strconv.FormatUint(uint64(runtime.NumCgoCall()), 10))
 	}
 
 	if *MEM {
@@ -52,38 +53,38 @@ func collector() {
 		runtime.ReadMemStats(m)
 
 		// General
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.alloc"), string(m.Alloc))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.total"), string(m.TotalAlloc))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.sys"), string(m.Sys))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.lookups"), string(m.Lookups))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.malloc"), string(m.Mallocs))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.frees"), string(m.Frees))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.alloc"), strconv.FormatUint(m.Alloc, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.total"), strconv.FormatUint(m.TotalAlloc, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.sys"), strconv.FormatUint(m.Sys, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.lookups"), strconv.FormatUint(m.Lookups, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.malloc"), strconv.FormatUint(m.Mallocs, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.frees"), strconv.FormatUint(m.Frees, 10))
 
 		// Heap
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.alloc"), string(m.HeapAlloc))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.sys"), string(m.HeapSys))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.idle"), string(m.HeapIdle))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.inuse"), string(m.HeapInuse))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.released"), string(m.HeapReleased))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.objects"), string(m.HeapObjects))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.alloc"), strconv.FormatUint(m.HeapAlloc, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.sys"), strconv.FormatUint(m.HeapSys, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.idle"), strconv.FormatUint(m.HeapIdle, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.inuse"), strconv.FormatUint(m.HeapInuse, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.released"), strconv.FormatUint(m.HeapReleased, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.heap.objects"), strconv.FormatUint(m.HeapObjects, 10))
 
 		// Stack
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.inuse"), string(m.StackInuse))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.sys"), string(m.StackSys))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mspan_inuse"), string(m.MSpanInuse))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mspan_sys"), string(m.MSpanSys))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mcache_inuse"), string(m.MCacheInuse))
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mcache_sys"), string(m.MCacheSys))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.inuse"), strconv.FormatUint(m.StackInuse, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.sys"), strconv.FormatUint(m.StackSys, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mspan_inuse"), strconv.FormatUint(m.MSpanInuse, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mspan_sys"), strconv.FormatUint(m.MSpanSys, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mcache_inuse"), strconv.FormatUint(m.MCacheInuse, 10))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.stack.mcache_sys"), strconv.FormatUint(m.MCacheSys, 10))
 
-		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.othersys"), string(m.OtherSys))
+		s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.othersys"), strconv.FormatUint(m.OtherSys, 10))
 
 		if *GC {
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.sys"), string(m.GCSys))
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.next"), string(m.NextGC))
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.last"), string(m.LastGC))
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.pause_total"), string(m.PauseTotalNs))
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.pause"), string(m.PauseNs[(m.NumGC+255)%256]))
-			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.count"), string(m.NumGC))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.sys"), strconv.FormatUint(m.GCSys, 10))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.next"), strconv.FormatUint(m.NextGC, 10))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.last"), strconv.FormatUint(m.LastGC, 10))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.pause_total"), strconv.FormatUint(m.PauseTotalNs, 10))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.pause"), strconv.FormatUint(m.PauseNs[(m.NumGC+255)%256], 10))
+			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.count"), strconv.FormatUint(uint64(m.NumGC), 10))
 		}
 	}
 
