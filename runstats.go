@@ -26,8 +26,6 @@ func init() {
 		panic("Unable to connect to Statsd")
 	}
 
-	flag.Parse()
-
 	prefix, err = os.Hostname()
 
 	if err != nil {
