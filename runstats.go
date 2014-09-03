@@ -27,6 +27,10 @@ func init() {
 }
 
 func collector() {
+	// Defer the first execution of this goroutine until the program
+	// finishes initializing.
+	runtime.Gosched()
+
 	if !flag.Parsed() {
 		flag.Parse()
 	}
