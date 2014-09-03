@@ -9,7 +9,10 @@ import "runtime"
 
 import "github.com/bmhatfield/g2s"
 
+var statsd *string = flag.String("statsd", "localhost:8125", "Statsd host:port pair")
+var user_prefix *string = flag.String("metric-prefix", "default", "Metric prefix path; detects the local hostname by default")
 var pause *int = flag.Int("pause", 10, "Collection pause interval")
+
 var CPU *bool = flag.Bool("cpu", true, "Collect CPU Statistics")
 var MEM *bool = flag.Bool("mem", true, "Collect Memory Statistics")
 var GC *bool = flag.Bool("gc", true, "Collect GC Statistics (requires Memory be enabled)")
@@ -20,24 +23,32 @@ var s g2s.Statter
 var err error
 
 func init() {
-	s, err = g2s.Dial("udp", "localhost:8125")
-
-	if err != nil {
-		panic("Unable to connect to Statsd")
-	}
-
-	prefix, err = os.Hostname()
-
-	if err != nil {
-		prefix = "unknown_host.go"
-	} else {
-		prefix = fmt.Sprintf("%s.go", prefix)
-	}
-
 	go collector()
 }
 
 func collector() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	s, err = g2s.Dial("udp", *statsd)
+
+	if err != nil {
+		panic(fmt.Sprintf("Unable to connect to Statsd on %s - %s", *statsd, err))
+	}
+
+	if *user_prefix == "default" {
+		prefix, err = os.Hostname()
+
+		if err != nil {
+			prefix = "unknown_host.go"
+		} else {
+			prefix = fmt.Sprintf("%s.go", prefix)
+		}
+	} else {
+		prefix = *user_prefix
+	}
+
 	for {
 		if *CPU {
 			// Goroutines
@@ -78,6 +89,7 @@ func collector() {
 			s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.othersys"), strconv.FormatUint(m.OtherSys, 10))
 
 			if *GC {
+				// GC
 				s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.sys"), strconv.FormatUint(m.GCSys, 10))
 				s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.next"), strconv.FormatUint(m.NextGC, 10))
 				s.Gauge(1.0, fmt.Sprintf("%s.%s", prefix, "mem.gc.last"), strconv.FormatUint(m.LastGC, 10))
@@ -87,7 +99,8 @@ func collector() {
 			}
 		}
 
-		// Don't collect for a time interval
+		// Gauges are a 'snapshot' rather than a histogram. Pausing for some interval
+		// aims to get a 'recent' snapshot out before statsd flushes metrics.
 		time.Sleep(time.Duration(*pause) * time.Second)
 	}
 }
