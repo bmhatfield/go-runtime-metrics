@@ -45,9 +45,9 @@ func collector() {
 		prefix, err = os.Hostname()
 
 		if err != nil {
-			prefix = "unknown_host.go"
+			prefix = "go.unknown"
 		} else {
-			prefix = fmt.Sprintf("%s.go", prefix)
+			prefix = fmt.Sprintf("go.%s", prefix)
 		}
 	} else {
 		prefix = *user_prefix
