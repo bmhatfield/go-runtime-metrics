@@ -30,7 +30,7 @@ func collector() {
 	for !flag.Parsed() {
 		// Defer execution of this goroutine.
 		runtime.Gosched()
-		
+
 		// Add an initial delay while the program initializes to avoid attempting to collect
 		// metrics prior to our flags being available / parsed.
 		time.Sleep(time.Duration(1) * time.Second)
