@@ -27,12 +27,13 @@ func init() {
 }
 
 func collector() {
-	// Defer the first execution of this goroutine until the program
-	// finishes initializing.
-	runtime.Gosched()
-
-	if !flag.Parsed() {
-		flag.Parse()
+	for !flag.Parsed() {
+		// Defer execution of this goroutine.
+		runtime.Gosched()
+		
+		// Add an initial delay while the program initializes to avoid attempting to collect
+		// metrics prior to our flags being available / parsed.
+		time.Sleep(time.Duration(1) * time.Second)
 	}
 
 	s, err = g2s.Dial("udp", *statsd)
