@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bmhatfield/go-runtime-metrics/Godeps/_workspace/src/github.com/bmhatfield/g2s"
+	"github.com/peterbourgon/g2s"
 )
 
 var (
