@@ -29,7 +29,8 @@ type Collector struct {
 	EnableGC bool
 
 	// Done, when closed, is used to signal Collector that is should stop collecting
-	// statistics and the Run function should return.
+	// statistics and the Run function should return. If Done is set, upon shutdown
+	// all gauges will be sent a final zero value to reset their values to 0.
 	Done <-chan struct{}
 
 	gaugeFunc GaugeFunc
@@ -52,6 +53,7 @@ func New(gaugeFunc GaugeFunc) *Collector {
 // PauseDur. This function will not return until Done has been closed (or never if Done is nil),
 // therefore it should be called in its own goroutine.
 func (c *Collector) Run() {
+	defer c.zeroStats()
 	c.outputStats()
 
 	// Gauges are a 'snapshot' rather than a histogram. Pausing for some interval
@@ -68,53 +70,83 @@ func (c *Collector) Run() {
 	}
 }
 
+type cpuStats struct {
+	NumGoroutine uint64
+	NumCgoCall   uint64
+}
+
+// zeroStats sets all the stat guages to zero. On shutdown we want to zero them out so they don't persist
+// at their last value until we start back up.
+func (c *Collector) zeroStats() {
+	if c.EnableCPU {
+		cStats := cpuStats{}
+		c.outputCPUStats(&cStats)
+	}
+	if c.EnableMem {
+		mStats := runtime.MemStats{}
+		c.outputMemStats(&mStats)
+		if c.EnableGC {
+			c.outputGCStats(&mStats)
+		}
+	}
+}
+
 func (c *Collector) outputStats() {
 	if c.EnableCPU {
-		// Goroutines
-		c.gaugeFunc("cpu.goroutines", uint64(runtime.NumGoroutine()))
-
-		// CGo calls
-		c.gaugeFunc("cpu.cgo_calls", uint64(runtime.NumCgoCall()))
+		cStats := cpuStats{
+			NumGoroutine: uint64(runtime.NumGoroutine()),
+			NumCgoCall:   uint64(runtime.NumCgoCall()),
+		}
+		c.outputCPUStats(&cStats)
 	}
-
 	if c.EnableMem {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
-
-		// General
-		c.gaugeFunc("mem.alloc", m.Alloc)
-		c.gaugeFunc("mem.total", m.TotalAlloc)
-		c.gaugeFunc("mem.sys", m.Sys)
-		c.gaugeFunc("mem.lookups", m.Lookups)
-		c.gaugeFunc("mem.malloc", m.Mallocs)
-		c.gaugeFunc("mem.frees", m.Frees)
-
-		// Heap
-		c.gaugeFunc("mem.heap.alloc", m.HeapAlloc)
-		c.gaugeFunc("mem.heap.sys", m.HeapSys)
-		c.gaugeFunc("mem.heap.idle", m.HeapIdle)
-		c.gaugeFunc("mem.heap.inuse", m.HeapInuse)
-		c.gaugeFunc("mem.heap.released", m.HeapReleased)
-		c.gaugeFunc("mem.heap.objects", m.HeapObjects)
-
-		// Stack
-		c.gaugeFunc("mem.stack.inuse", m.StackInuse)
-		c.gaugeFunc("mem.stack.sys", m.StackSys)
-		c.gaugeFunc("mem.stack.mspan_inuse", m.MSpanInuse)
-		c.gaugeFunc("mem.stack.mspan_sys", m.MSpanSys)
-		c.gaugeFunc("mem.stack.mcache_inuse", m.MCacheInuse)
-		c.gaugeFunc("mem.stack.mcache_sys", m.MCacheSys)
-
-		c.gaugeFunc("mem.othersys", m.OtherSys)
-
+		c.outputMemStats(m)
 		if c.EnableGC {
-			// GC
-			c.gaugeFunc("mem.gc.sys", m.GCSys)
-			c.gaugeFunc("mem.gc.next", m.NextGC)
-			c.gaugeFunc("mem.gc.last", m.LastGC)
-			c.gaugeFunc("mem.gc.pause_total", m.PauseTotalNs)
-			c.gaugeFunc("mem.gc.pause", m.PauseNs[(m.NumGC+255)%256])
-			c.gaugeFunc("mem.gc.count", uint64(m.NumGC))
+			c.outputGCStats(m)
 		}
 	}
+}
+
+func (c *Collector) outputCPUStats(s *cpuStats) {
+	c.gaugeFunc("cpu.goroutines", s.NumGoroutine)
+	c.gaugeFunc("cpu.cgo_calls", s.NumCgoCall)
+}
+
+func (c *Collector) outputMemStats(m *runtime.MemStats) {
+	// General
+	c.gaugeFunc("mem.alloc", m.Alloc)
+	c.gaugeFunc("mem.total", m.TotalAlloc)
+	c.gaugeFunc("mem.sys", m.Sys)
+	c.gaugeFunc("mem.lookups", m.Lookups)
+	c.gaugeFunc("mem.malloc", m.Mallocs)
+	c.gaugeFunc("mem.frees", m.Frees)
+
+	// Heap
+	c.gaugeFunc("mem.heap.alloc", m.HeapAlloc)
+	c.gaugeFunc("mem.heap.sys", m.HeapSys)
+	c.gaugeFunc("mem.heap.idle", m.HeapIdle)
+	c.gaugeFunc("mem.heap.inuse", m.HeapInuse)
+	c.gaugeFunc("mem.heap.released", m.HeapReleased)
+	c.gaugeFunc("mem.heap.objects", m.HeapObjects)
+
+	// Stack
+	c.gaugeFunc("mem.stack.inuse", m.StackInuse)
+	c.gaugeFunc("mem.stack.sys", m.StackSys)
+	c.gaugeFunc("mem.stack.mspan_inuse", m.MSpanInuse)
+	c.gaugeFunc("mem.stack.mspan_sys", m.MSpanSys)
+	c.gaugeFunc("mem.stack.mcache_inuse", m.MCacheInuse)
+	c.gaugeFunc("mem.stack.mcache_sys", m.MCacheSys)
+
+	c.gaugeFunc("mem.othersys", m.OtherSys)
+}
+
+func (c *Collector) outputGCStats(m *runtime.MemStats) {
+	c.gaugeFunc("mem.gc.sys", m.GCSys)
+	c.gaugeFunc("mem.gc.next", m.NextGC)
+	c.gaugeFunc("mem.gc.last", m.LastGC)
+	c.gaugeFunc("mem.gc.pause_total", m.PauseTotalNs)
+	c.gaugeFunc("mem.gc.pause", m.PauseNs[(m.NumGC+255)%256])
+	c.gaugeFunc("mem.gc.count", uint64(m.NumGC))
 }
