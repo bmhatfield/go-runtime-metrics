@@ -11,8 +11,10 @@ func TestCollector(t *testing.T) {
 	}
 
 	var keys []string
+	latestVal := make(map[string]uint64)
 	gaugeFunc := func(key string, val uint64) {
 		keys = append(keys, key)
+		latestVal[key] = val
 	}
 
 	done := make(chan struct{})
@@ -30,9 +32,10 @@ func TestCollector(t *testing.T) {
 	<-collectorShutdown
 
 	// we're going to check a few keys to make sure that the stats are being output
-	// correctly. We expect there to be two of each key because there is one
-	// from the initial stats, plus another one after the 1 second pause time.
-	expCount := 2
+	// correctly. We expect there to be three of each key because there is one
+	// from the initial stats, plus another one after the 1 second pause time, plus
+	// the final zeroing out on shutdown
+	expCount := 3
 	expKeys := []string{
 		"cpu.goroutines",
 		"mem.lookups",
@@ -47,6 +50,9 @@ func TestCollector(t *testing.T) {
 		}
 		if count != expCount {
 			t.Errorf("unexpected num stats for key(%s):\ngot: %d\nexp: %d", expKey, count, expCount)
+		}
+		if latestVal[expKey] != 0 {
+			t.Errorf("expected key (%s) to be zeroed out on shutdown, instead latest value is %d", expKey, latestVal[expKey])
 		}
 	}
 }
