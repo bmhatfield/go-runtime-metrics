@@ -37,7 +37,7 @@ type Collector struct {
 }
 
 // New creates a new Collector that will periodically output statistics to gaugeFunc. It
-// will aslo set the values of the exported fields to the described defaults. The values
+// will also set the values of the exported fields to the described defaults. The values
 // of the exported defaults can be changed at any point before Run is called.
 func New(gaugeFunc GaugeFunc) *Collector {
 	return &Collector{
