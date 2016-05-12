@@ -17,9 +17,10 @@ var (
 	prefix *string = flag.String("metric-prefix", "<detect-hostname>", "Metric prefix path; detects the local hostname by default")
 	pause  *int    = flag.Int("pause", 10, "Collection pause interval")
 
-	cpu *bool = flag.Bool("cpu", true, "Collect CPU Statistics")
-	mem *bool = flag.Bool("mem", true, "Collect Memory Statistics")
-	gc  *bool = flag.Bool("gc", true, "Collect GC Statistics (requires Memory be enabled)")
+	publish *bool = flag.Bool("publish-runtime-stats", true, "Collect go runtime statistics")
+	cpu     *bool = flag.Bool("cpu", true, "Collect CPU Statistics")
+	mem     *bool = flag.Bool("mem", true, "Collect Memory Statistics")
+	gc      *bool = flag.Bool("gc", true, "Collect GC Statistics (requires Memory be enabled)")
 
 	s g2s.Statter
 )
@@ -62,5 +63,8 @@ func runCollector() {
 	c.EnableCPU = *cpu
 	c.EnableMem = *mem
 	c.EnableGC = *gc
-	c.Run()
+
+	if *publish {
+		c.Run()
+	}
 }
